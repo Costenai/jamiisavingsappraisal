@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api xmlns="http://ws.apache.org/ns/synapse"
+     name="LoanEligibilityAPI"
+     context="/loans">
+
+    <resource methods="POST" uri-template="/eligibility">
+
+        <inSequence>
+
+            <!-- Capture request data to ensure data  shared serves the loan eligibity validation-->
+            <property name="countryIsoCode"
+                      expression="json-eval($.countryIsoCode)"
+                      scope="default" type="STRING"/>
+
+            <property name="phoneNumber"
+                      expression="json-eval($.phoneNumber)"
+                      scope="default" type="STRING"/>
+
+            <property name="loanProduct"
+                      expression="json-eval($.loanProduct)"
+                      scope="default" type="STRING"/>
+
+            <property name="loanAmount"
+                      expression="json-eval($.loanAmount)"
+                      scope="default" type="STRING"/>
+
+            <!-- Correlation ID -->
+            <property name="correlationId"
+                      expression="get-property('transport','X-Correlation-ID')"
+                      scope="default" type="STRING"/>
+
+            <filter xpath="not(boolean(get-property('correlationId')))">
+                <then>
+                    <property name="correlationId"
+                              expression="get-property('MessageID')"
+                              scope="default" type="STRING"/>
+                </then>
+            </filter>
+
+            <!-- Default decision -->
+            <property name="decisionStatusCode"
+                      value="200" scope="default" type="STRING"/>
+
+            <property name="loanEligibility"
+                      value="Loan declined" scope="default" type="STRING"/>
+
+            <property name="decisionMessage"
+                      value="The applicant does not meet the eligibility criteria."
+                      scope="default" type="STRING"/>
+
+            <!-- Rule 1: Kenya only -->
+            <filter xpath="get-property('countryIsoCode') = 'KE'">
+
+                <then>
+
+                    <!-- Rule 2: Must be a Kenyan citizen -->
+                    <filter xpath="get-property('countryIsoCode') = 'KE'">
+
+                        <then>
+
+                            <!-- Rule 3: Loan Product must be supported -->
+                            <filter xpath="get-property('loanProduct') = 'Salary' or get-property('loanProduct') = 'Business'">
+
+                                <then>
+
+                                    <!-- Rule 4: Amount must be numeric and greater than 1000 -->
+                                    <filter xpath="number(get-property('loanAmount')) = number(get-property('loanAmount')) and number(get-property('loanAmount')) &gt; 1000">
+
+                                        <then>
+
+                                            <!-- Salary loan: maximum 999999 -->
+                                            <filter xpath="get-property('loanProduct') = 'Salary'">
+
+                                                <then>
+                                                    <filter xpath="number(get-property('loanAmount')) &lt;= 999999">
+                                                        <then>
+                                                            <property name="loanEligibility"
+                                                                      value="Success"
+                                                                      scope="default"/>
+
+                                                            <property name="decisionMessage"
+                                                                      value="Loan eligibility criteria satisfied."
+                                                                      scope="default"/>
+                                                        </then>
+                                                        <else>
+                                                            <property name="decisionStatusCode"
+                                                                      value="400"
+                                                                      scope="default"/>
+
+                                                            <property name="loanEligibility"
+                                                                      value="Failed"
+                                                                      scope="default"/>
+
+                                                            <property name="decisionMessage"
+                                                                      value="Salary loan amount must not exceed KSh 999,999."
+                                                                      scope="default"/>
+                                                        </else>
+                                                    </filter>
+                                                </then>
+
+                                                <!-- Business loan: maximum 99999 -->
+                                                <else>
+                                                    <filter xpath="number(get-property('loanAmount')) &lt;= 99999">
+                                                        <then>
+                                                            <property name="loanEligibility"
+                                                                      value="Success"
+                                                                      scope="default"/>
+
+                                                            <property name="decisionMessage"
+                                                                      value="Loan eligibility criteria satisfied."
+                                                                      scope="default"/>
+                                                        </then>
+                                                        <else>
+                                                            <property name="decisionStatusCode"
+                                                                      value="400"
+                                                                      scope="default"/>
+
+                                                            <property name="loanEligibility"
+                                                                      value="Failed"
+                                                                      scope="default"/>
+
+                                                            <property name="decisionMessage"
+                                                                      value="Business loan amount must not exceed KSh 99,999."
+                                                                      scope="default"/>
+                                                        </else>
+                                                    </filter>
+                                                </else>
+
+                                            </filter>
+
+                                        </then>
+
+                                        <!-- Invalid, non-numeric, or too-small amount -->
+                                        <else>
+                                            <property name="decisionStatusCode"
+                                                      value="400"
+                                                      scope="default"/>
+
+                                            <property name="loanEligibility"
+                                                      value="Failed"
+                                                      scope="default"/>
+
+                                            <property name="decisionMessage"
+                                                      value="Loan amount must be numeric and greater than KSh 1,000."
+                                                      scope="default"/>
+                                        </else>
+
+                                    </filter>
+
+                                </then>
+
+                                <!-- Unsupported loan product -->
+                                <else>
+                                    <property name="decisionStatusCode"
+                                              value="400"
+                                              scope="default"/>
+
+                                    <property name="loanEligibility"
+                                              value="Failed"
+                                              scope="default"/>
+
+                                    <property name="decisionMessage"
+                                              value="Loan product must be Salary or Business."
+                                              scope="default"/>
+                                </else>
+
+                            </filter>
+
+                        </then>
+
+                        <!-- Citizenship failed -->
+                        <else>
+                            <property name="decisionMessage"
+                                      value="Loan declined. Applicant must be a Kenyan citizen."
+                                      scope="default"/>
+                        </else>
+
+                    </filter>
+
+                </then>
+
+                <!-- Country failed -->
+                <else>
+                    <property name="decisionMessage"
+                              value="Loan declined. Loans are available to Kenyan applicants only."
+                              scope="default"/>
+                </else>
+
+            </filter>
+
+            <!-- Log the decision -->
+            <log level="custom">
+                <property name="API" value="LoanEligibilityAPI"/>
+                <property name="COUNTRY"
+                          expression="get-property('countryIsoCode')"/>
+                <property name="LOAN_PRODUCT"
+                          expression="get-property('loanProduct')"/>
+                <property name="LOAN_AMOUNT"
+                          expression="get-property('loanAmount')"/>
+                <property name="ELIGIBILITY"
+                          expression="get-property('loanEligibility')"/>
+                <property name="CORRELATION_ID"
+                          expression="get-property('correlationId')"/>
+            </log>
+
+            <!-- Return JSON -->
+            <payloadFactory media-type="json">
+                <format>
+                    {
+                      "statusCode": "$1",
+                      "loanEligibility": "$2",
+                      "countryIsoCode": "$3",
+                      "phoneNumber": "$4",
+                      "loanAmount": "$5",
+                      "loanProduct": "$6",
+                      "correlationId": "$7",
+                      "message": "$8"
+                    }
+                </format>
+                <args>
+                    <arg evaluator="xml"
+                         expression="get-property('decisionStatusCode')"/>
+                    <arg evaluator="xml"
+                         expression="get-property('loanEligibility')"/>
+                    <arg evaluator="xml"
+                         expression="get-property('countryIsoCode')"/>
+                    <arg evaluator="xml"
+                         expression="get-property('phoneNumber')"/>
+                    <arg evaluator="xml"
+                         expression="get-property('loanAmount')"/>
+                    <arg evaluator="xml"
+                         expression="get-property('loanProduct')"/>
+                    <arg evaluator="xml"
+                         expression="get-property('correlationId')"/>
+                    <arg evaluator="xml"
+                         expression="get-property('decisionMessage')"/>
+                </args>
+            </payloadFactory>
+
+            <property name="HTTP_SC"
+                      expression="get-property('decisionStatusCode')"
+                      scope="axis2" type="INTEGER"/>
+
+            <property name="messageType"
+                      value="application/json"
+                      scope="axis2" type="STRING"/>
+
+            <respond/>
+
+        </inSequence>
+
+        <outSequence>
+            <send/>
+        </outSequence>
+
+        <faultSequence>
+            <log level="full">
+                <property name="MESSAGE"
+                          value="Loan eligibility API processing error"/>
+                <property name="ERROR_CODE"
+                          expression="get-property('ERROR_CODE')"/>
+                <property name="ERROR_MESSAGE"
+                          expression="get-property('ERROR_MESSAGE')"/>
+            </log>
+
+            <property name="HTTP_SC"
+                      value="500"
+                      scope="axis2" type="INTEGER"/>
+
+            <payloadFactory media-type="json">
+                <format>
+                    {
+                      "statusCode": "500",
+                      "loanEligibility": "Error",
+                      "message": "Unable to process the loan eligibility request."
+                    }
+                </format>
+                <args/>
+            </payloadFactory>
+
+            <property name="messageType"
+                      value="application/json"
+                      scope="axis2"/>
+
+            <respond/>
+        </faultSequence>
+
+    </resource>
+</api>

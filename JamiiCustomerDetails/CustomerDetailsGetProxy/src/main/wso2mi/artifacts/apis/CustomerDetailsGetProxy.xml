@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api xmlns="http://ws.apache.org/ns/synapse"
+     name="CustomerDetailsGetProxy"
+     context="/customers">
+
+    <resource methods="GET" uri-template="/{customerId}">
+
+        <inSequence>
+
+            <!-- 1. Capture the incoming correlation ID -->
+            <property name="CORRELATION_ID"
+                      expression="get-property('transport', 'X-Correlation-ID')"
+                      scope="default"
+                      type="STRING"/>
+
+            <!-- 2. Generate a correlation ID when missing -->
+            <filter xpath="string-length(normalize-space(get-property('CORRELATION_ID'))) > 0">
+                <then>
+                    <log level="custom">
+                        <property name="MESSAGE"
+                                  value="Incoming correlation ID received"/>
+                        <property name="CORRELATION_ID"
+                                  expression="get-property('CORRELATION_ID')"/>
+                    </log>
+                </then>
+                <else>
+                    <property name="CORRELATION_ID"
+                              expression="get-property('MessageID')"
+                              scope="default"
+                              type="STRING"/>
+                </else>
+            </filter>
+
+            <!-- 3. Set correlation ID on outbound request -->
+            <header name="X-Correlation-ID"
+                    scope="transport"
+                    expression="get-property('CORRELATION_ID')"/>
+
+            <!-- 4. Remove internal request header -->
+            <header name="X-Internal-Secret"
+                    scope="transport"
+                    action="remove"/>
+
+            <!-- 5. Specify expected response format -->
+            <header name="Accept"
+                    scope="transport"
+                    value="application/json"/>
+
+            <!-- 6. Invoke the backend -->
+            <send>
+                <endpoint>
+                    <http method="GET"
+                          uri-template="https://jsonplaceholder.typicode.com/users/{uri.var.customerId}">
+
+                        <timeout>
+                            <duration>5000</duration>
+                            <responseAction>fault</responseAction>
+                        </timeout>
+
+                        <suspendOnFailure>
+                            <errorCodes>-1</errorCodes>
+                            <initialDuration>0</initialDuration>
+                            <progressionFactor>1.0</progressionFactor>
+                            <maximumDuration>0</maximumDuration>
+                        </suspendOnFailure>
+
+                    </http>
+                </endpoint>
+            </send>
+
+        </inSequence>
+
+        <!-- 7. Process backend response -->
+        <outSequence>
+
+            <!-- Remove backend infrastructure headers -->
+            <header name="X-Powered-By"
+                    scope="transport"
+                    action="remove"/>
+
+            <header name="Server"
+                    scope="transport"
+                    action="remove"/>
+
+            <!-- Return correlation ID to the client -->
+            <header name="X-Correlation-ID"
+                    scope="transport"
+                    expression="get-property('CORRELATION_ID')"/>
+
+            <!-- Send backend response to client -->
+            <send/>
+
+        </outSequence>
+
+        <!-- 8. Handle backend failures -->
+        <faultSequence>
+
+            <log level="custom">
+                <property name="ERROR_MESSAGE"
+                          expression="get-property('ERROR_MESSAGE')"/>
+                <property name="CORRELATION_ID"
+                          expression="get-property('CORRELATION_ID')"/>
+            </log>
+
+            <property name="HTTP_SC"
+                      value="503"
+                      scope="axis2"
+                      type="INTEGER"/>
+
+            <payloadFactory media-type="json">
+                <format>
+                    {
+                        "error": {
+                            "code": "SERVICE_UNAVAILABLE",
+                            "message": "An error occurred while calling the customer details API.",
+                            "correlationId": "$1"
+                        }
+                    }
+                </format>
+                <args>
+                    <arg evaluator="xml"
+                         expression="get-property('CORRELATION_ID')"/>
+                </args>
+            </payloadFactory>
+
+            <property name="messageType"
+                      value="application/json"
+                      scope="axis2"/>
+
+            <property name="ContentType"
+                      value="application/json"
+                      scope="axis2"/>
+
+            <header name="X-Correlation-ID"
+                    scope="transport"
+                    expression="get-property('CORRELATION_ID')"/>
+
+            <respond/>
+
+        </faultSequence>
+
+    </resource>
+
+</api>

@@ -1,0 +1,7 @@
+AccountDetails
+Comsumer Key: 8F2BoaruMY30jfGyvz4ausopznka
+Consumer Secret : ImD8l0Nt84jP0XFJD5JSRfx0fM4a
+
+CustomerDetails
+Comsumer Key: 4FawZIsyRNt_Z3u_21LCdBPqCUga
+Consumer secret: QZo0lph7f9GY5jfxOTtnqAsEQgsa

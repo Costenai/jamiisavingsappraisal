@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence xmlns="http://ws.apache.org/ns/synapse" name="AuditLogSeq" onError="AuditFailSeq">
+    <property name="stage"      scope="default" type="STRING" value="AUDIT"/>
+    <property name="aud_status" scope="default" type="STRING"
+          expression="substring-before(concat(string(get-property('axis2','HTTP_SC')), '.'), '.')"/>
+    <property name="aud_url"    scope="default" type="STRING" expression="substring(get-property('REST_FULL_REQUEST_PATH'), 1, 500)"/>
+    <property name="aud_acct"   scope="default" type="STRING" expression="substring(get-property('uri.var.accountNumber'), 1, 20)"/>
+    <property name="aud_resp"   scope="default" type="STRING" expression="json-eval($)"/>
+    <property name="aud_ms" scope="default" type="STRING"
+          expression="substring-before(concat(string(floor(get-property('SYSTEM_TIME') - get-property('req_start'))), '.'), '.')"/>
+    <dbreport>
+        <connection>
+            <pool>
+                <driver>com.mysql.cj.jdbc.Driver</driver>
+                <url>jdbc:mysql://localhost:3306/customerdetails_db?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</url>
+                <user>soauser</user>
+                <password>Int3gr@t!0n</password>
+            </pool>
+        </connection>
+        <statement>
+            <sql><![CDATA[INSERT INTO api_audit_log (request_id, api_name, request_url, account_number, http_status, outcome, response_body, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?)]]></sql>
+            <parameter expression="get-property('req_id')"        type="VARCHAR"/>
+            <parameter value="AccountBalanceAPI"                  type="VARCHAR"/>
+            <parameter expression="get-property('aud_url')"       type="VARCHAR"/>
+            <parameter expression="get-property('aud_acct')"      type="VARCHAR"/>
+            <parameter expression="get-property('aud_status')"    type="INTEGER"/>
+            <parameter expression="get-property('audit_outcome')" type="VARCHAR"/>
+            <parameter expression="get-property('aud_resp')"      type="VARCHAR"/>
+            <parameter expression="get-property('aud_ms')"        type="INTEGER"/>
+        </statement>
+    </dbreport>
+</sequence>

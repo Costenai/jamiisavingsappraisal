@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence xmlns="http://ws.apache.org/ns/synapse" name="AuditFailSeq">
+    <log level="custom">
+        <property name="AUDIT_INSERT_FAILED" expression="get-property('ERROR_MESSAGE')"/>
+        <property name="AUDIT_REQUEST_ID" expression="get-property('req_id')"/>
+    </log>
+    <respond/>
+</sequence>

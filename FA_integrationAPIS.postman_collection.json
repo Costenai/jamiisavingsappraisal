@@ -1,0 +1,234 @@
+{
+  "info": {
+    "_postman_id": "7e5960c5-3f7e-468c-9432-12f5d5b02b31",
+    "name": "FA_integrationAPIS",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "2751961"
+  },
+  "item": [
+    {
+      "name": "accountbalance-Direct",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJ4NXQiOiJZMkUxWXpsaU5UUm1PV0kyWkRNNVpqTTVObUV4WVdGaE4yRTNPREEwT0RFek9UTmpNV1JtWW1JMU5qZGpabUZqWm1JNU5qSmxObUU0T0dGa05qVTRPQSIsImtpZCI6IlkyRTFZemxpTlRSbU9XSTJaRE01WmpNNU5tRXhZV0ZoTjJFM09EQTBPREV6T1ROak1XUm1ZbUkxTmpkalptRmpabUk1TmpKbE5tRTRPR0ZrTmpVNE9BX1JTMjU2IiwidHlwIjoiYXQrand0IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIwMzcwMWI2Ny03YjY3LTRkMmItOWUyZS0wZmZmMDJhYmVkNTkiLCJhdXQiOiJBUFBMSUNBVElPTiIsImlzcyI6Imh0dHBzOi8vbG9jYWxob3N0Ojk0NDMvb2F1dGgyL3Rva2VuIiwiZW50aXR5X2lkIjoiQ2NHckNvQVUzWmtvcXdTeDJST0lvWHBGV0pRYSIsImNsaWVudF9pZCI6IkNjR3JDb0FVM1prb3F3U3gyUk9Jb1hwRldKUWEiLCJ1c2lkIjoiNjNmMWIxMzctY2M0Ny00YzJjLWIxMGEtYjg0Zjg3ZTEzNTA0IiwiYXVkIjoiQ2NHckNvQVUzWmtvcXdTeDJST0lvWHBGV0pRYSIsIm5iZiI6MTc5MTk5MjkzNCwiYXpwIjoiQ2NHckNvQVUzWmtvcXdTeDJST0lvWHBGV0pRYSIsInNjb3BlIjoiZGVmYXVsdCIsImV4cCI6MTc5MTk5NjUzNCwiaWF0IjoxNzkxOTkyOTM0LCJqdGkiOiIzYjkyM2YzZS04OWIxLTQ5OWItYjllYS1hNzZjNTc0MDg0NDYifQ.ND4QqD0YvxA3q__g_WIZE8sDBfWnLMmUPvfKQqXSTgWQpG-ZemAaPKY75afjxrvfhfiaKVfgrczhm0sI9IhieOnqHL8xnWOierwYmrxZy55olzZp66q-ZlksiYut_EuJ5B2u-smxBUaBmpwos7d_4gFZYu24z7PI1hNy7vtcyHonGuUX5DBAyKZljXRvsELNmIX65ynKNh8kWMs2Mms0i67_qG7JNbtvSoNBQtsp5Apzcl4eLFDNTIMBHleBAw_lHvHlwwG77ZSEOnErfMO5RpyrShOD7jNKFPb4xLhC7SkhkMu4ZBr2UhAvhIh7viwzkaVqRWPtJuBQwPsnrH6O3A",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8290/accounts/038000021400/balance",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8290",
+          "path": [
+            "accounts",
+            "038000021400",
+            "balance"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "accountbalance -APIM",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJ4NXQiOiJZMkUxWXpsaU5UUm1PV0kyWkRNNVpqTTVObUV4WVdGaE4yRTNPREEwT0RFek9UTmpNV1JtWW1JMU5qZGpabUZqWm1JNU5qSmxObUU0T0dGa05qVTRPQSIsImtpZCI6IlkyRTFZemxpTlRSbU9XSTJaRE01WmpNNU5tRXhZV0ZoTjJFM09EQTBPREV6T1ROak1XUm1ZbUkxTmpkalptRmpabUk1TmpKbE5tRTRPR0ZrTmpVNE9BX1JTMjU2IiwidHlwIjoiYXQrand0IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIwMzcwMWI2Ny03YjY3LTRkMmItOWUyZS0wZmZmMDJhYmVkNTkiLCJhdXQiOiJBUFBMSUNBVElPTiIsImlzcyI6Imh0dHBzOi8vbG9jYWxob3N0Ojk0NDMvb2F1dGgyL3Rva2VuIiwiZW50aXR5X2lkIjoiQ2NHckNvQVUzWmtvcXdTeDJST0lvWHBGV0pRYSIsImNsaWVudF9pZCI6IkNjR3JDb0FVM1prb3F3U3gyUk9Jb1hwRldKUWEiLCJ1c2lkIjoiNWNlOTIyMmQtNDhmMi00ZTEwLTgzMzktOWYwOWI0Y2NiNjcyIiwiYXVkIjoiQ2NHckNvQVUzWmtvcXdTeDJST0lvWHBGV0pRYSIsIm5iZiI6MTc5MTk5MzgzNCwiYXpwIjoiQ2NHckNvQVUzWmtvcXdTeDJST0lvWHBGV0pRYSIsInNjb3BlIjoiZGVmYXVsdCIsImV4cCI6MTc5MTk5NzQzNCwiaWF0IjoxNzkxOTkzODM0LCJqdGkiOiIzNTAzODZlMy1iMjBiLTRmNTYtYjljNy1lZDcyNzBlN2Q5NTcifQ.lRg_hDKWupTRNuSn_ORnbtsjaBq6OXPU2VNVNTb99HykqKCj6rY8RsTttgGdt8Vr-g2SqAc8UszQLz7-QMnQEFJG3IZEReOyVzzsYAUNJQoIUnTrhiUZcPiQqOvWjGSDxHQ_tM1bMeK_roxLxqwz4h97Xb54eXIbfcrKYxDJ9SKHCZb1t1HfvzkPQW_KSzAKly0EvlWc-sXQMCaz7ANQuWGxa_x1BjevkS_uGXYLvY70J-Loc6_JBJ4ffy3hWmQQN4N8tUQfZbYSabUr3s6pIkGn_uld6Zk3UPlIgzO_DTPTJpclhPzJT-dkq56pBfBGn0DGabiXgVDCIegzqTkNig",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8290/accounts/038000021400/balance",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8290",
+          "path": [
+            "accounts",
+            "038000021400",
+            "balance"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TokenAccess-Acct",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "CcGrCoAU3ZkoqwSx2ROIoXpFWJQa",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "L42e9iwd5ef0wObzBdbPqcfYweMa",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "grant_type",
+            "value": "client_credentials"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "client_credentials"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://localhost:9443/oauth2/token",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "9443",
+          "path": [
+            "oauth2",
+            "token"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TokenAccess-Cust",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "4FawZIsyRNt_Z3u_21LCdBPqCUga",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "QZo0lph7f9GY5jfxOTtnqAsEQgsa",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "grant_type",
+            "value": "client_credentials"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "client_credentials"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://localhost:9443/oauth2/token",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "9443",
+          "path": [
+            "oauth2",
+            "token"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "CustomeDetailsGet-Direct",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8290/customers/2",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8290",
+          "path": [
+            "customers",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "LoanEligibility-Direct",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Correlation-ID",
+            "value": "123456"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"countryIsoCode\": \"KETZ\",\r\n    \"loanProduct\":\"Salary\",\r\n    \"loanAmount\":\"10000\",\r\n    \"phoneNumber\":\"254727327745\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8290/loans/eligibility",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8290",
+          "path": [
+            "loans",
+            "eligibility"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

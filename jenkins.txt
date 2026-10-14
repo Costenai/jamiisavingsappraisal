@@ -1,0 +1,81 @@
+
+pipeline {
+    agent any
+    
+    tools {
+        // Ensure tool names match your Jenkins global tool configuration
+        maven 'Maven 3.8.8'
+        jdk 'JDK 17'
+    }
+    
+    environment {
+        MI_HOST = 'http://localhost:8290'
+    }
+    
+    stages {
+        stage('1. Checkout') {
+            steps {
+                echo 'Checking out source code from repository...'
+                checkout scm
+            }
+        }
+        
+        stage('2. Build & Package') {
+            steps {
+                echo 'Building WSO2 MI Carbon Application / Maven project...'
+                // Adjust maven goals if you use a parent pom or composite exporter pom
+                sh 'mvn clean install -DskipTests'
+            }
+        }
+        
+        stage('3. Automated API Smoke Tests') {
+            steps {
+                script {
+                    echo 'Running integration smoke tests across all three WSO2 MI endpoints...'
+                    
+                    // --- Test 1: Customer Details API ---
+                    echo 'Testing endpoint: /customers/{customerId}'
+                    def customerStatus = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${MI_HOST}/customers/1", returnStdout: true).trim()
+                    echo "Customer API Response Code: ${customerStatus}"
+                    if (customerStatus != '200') {
+                        error("Smoke test failed for /customers/1 with status ${customerStatus}")
+                    }
+
+                    // --- Test 2: Loan Eligibility API ---
+                    echo 'Testing endpoint: /loans/eligibility'
+                    def loanStatus = sh(script: """
+                        curl -s -o /dev/null -w '%{http_code}' -X POST ${MI_HOST}/loans/eligibility \\
+                        -H "Content-Type: application/json" \\
+                        -d '{"countryIsoCode": "KE"}'
+                    """, returnStdout: true).trim()
+                    echo "Loan Eligibility API Response Code: ${loanStatus}"
+                    if (loanStatus != '200') {
+                        error("Smoke test failed for /loans/eligibility with status ${loanStatus}")
+                    }
+
+                    // --- Test 3: Account Balance API ---
+                    echo 'Testing endpoint: /accounts/{accountNumber}/balance'
+                    def accountStatus = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${MI_HOST}/accounts/ACC1001/balance", returnStdout: true).trim()
+                    echo "Account Balance API Response Code: ${accountStatus}"
+                    if (accountStatus != '200') {
+                        error("Smoke test failed for /accounts/ACC1001/balance with status ${accountStatus}")
+                    }
+                    
+                    echo 'All three WSO2 MI APIs passed integration smoke testing successfully!'
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check build logs or API endpoint availability.'
+        }
+    }
+}

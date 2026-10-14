@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- API: http://localhost:port/accounts/{accountNumber}/balance  (calls AccountDataService) -->
+<api xmlns="http://ws.apache.org/ns/synapse" name="AccountBalanceAPI" context="/accounts">
+    <resource methods="GET" uri-template="/{accountNumber}/balance">
+        <inSequence>
+            <property name="req_id" scope="default" type="STRING"
+                      expression="substring-after(get-property('MessageID'), 'urn:uuid:')"/>
+            <property name="req_ts" scope="default" type="STRING"
+                      expression="concat(get-property('SYSTEM_DATE','yyyy-MM-dd'),'T',get-property('SYSTEM_DATE','HH:mm:ssXXX'))"/>
+            <property name="req_start" scope="default" type="STRING" expression="get-property('SYSTEM_TIME')"/>
+            <property name="stage" scope="default" type="STRING" value="INIT"/>
+
+            <filter source="get-property('uri.var.accountNumber')" regex="^[A-Za-z0-9-]{5,20}$">
+                <then>
+                    <property name="stage" scope="default" type="STRING" value="DB"/>
+                    <property name="Accept" scope="transport" value="application/xml"/>
+                    <call>
+                        <endpoint>
+                            <http method="get"
+                                  uri-template="http://localhost:8290/services/AccountDataService.HTTPEndpoint/accounts/{uri.var.accountNumber}/balance"/>
+                        </endpoint>
+                    </call>
+                    <property name="stage" scope="default" type="STRING" value="DONE"/>
+
+                    <!-- Mapping http code 200 and others for validation and mapping on the logging service -->
+                    <filter source="get-property('axis2','HTTP_SC')" regex="2[0-9][0-9]">
+                        <then>
+                            <property name="acct_number"   scope="default" type="STRING" expression="//*[local-name()='accountNumber']"/>
+                            <property name="acct_status"   scope="default" type="STRING" expression="//*[local-name()='status']"/>
+                            <property name="acct_balance"  scope="default" type="STRING" expression="//*[local-name()='balance']"/>
+                            <property name="acct_currency" scope="default" type="STRING" expression="//*[local-name()='currency']"/>
+
+                            <filter source="get-property('acct_status')" regex="ACTIVE|DORMANT|CLOSED">
+                                <then>
+                                    <property name="HTTP_SC" scope="axis2" value="200"/>
+                                    <property name="NO_ENTITY_BODY" scope="axis2" action="remove"/>
+                                    <payloadFactory media-type="json">
+                                        <format>{"accountNumber":"$1","status":"$2","balance":{"amount":$3,"currency":"$4"},"requestId":"$5","timestamp":"$6"}</format>
+                                        <args>
+                                            <arg evaluator="xml" expression="get-property('acct_number')"/>
+                                            <arg evaluator="xml" expression="get-property('acct_status')"/>
+                                            <arg evaluator="xml" expression="get-property('acct_balance')"/>
+                                            <arg evaluator="xml" expression="get-property('acct_currency')"/>
+                                            <arg evaluator="xml" expression="get-property('req_id')"/>
+                                            <arg evaluator="xml" expression="get-property('req_ts')"/>
+                                        </args>
+                                    </payloadFactory>
+                                    <property name="messageType" scope="axis2" value="application/json"/>
+                                    <property name="audit_outcome" scope="default" type="STRING" value="SUCCESS"/>
+                                    <sequence key="AuditLogSeq"/>
+                                    <respond/>
+                                </then>
+                                <else>
+                                    <property name="err_status"  scope="default" type="STRING" value="404"/>
+                                    <property name="err_code"    scope="default" type="STRING" value="ACCOUNT_NOT_FOUND"/>
+                                    <property name="err_message" scope="default" type="STRING" value="No account exists with the given account number."/>
+                                    <sequence key="ErrorResponseSeq"/>
+                                </else>
+                            </filter>
+                        </then>
+                        <else>
+                            <log level="custom">
+                                <property name="DS_HTTP_STATUS" expression="get-property('axis2','HTTP_SC')"/>
+                            </log>
+                            <property name="err_status"  scope="default" type="STRING" value="503"/>
+                            <property name="err_code"    scope="default" type="STRING" value="DB_ERROR"/>
+                            <property name="err_message" scope="default" type="STRING" value="The account database is currently unavailable. Please retry later."/>
+                            <sequence key="ErrorResponseSeq"/>
+                        </else>
+                    </filter>
+                </then>
+                <else>
+                    <property name="err_status"  scope="default" type="STRING" value="400"/>
+                    <property name="err_code"    scope="default" type="STRING" value="INVALID_ACCOUNT_NUMBER"/>
+                    <property name="err_message" scope="default" type="STRING" value="Account number must be 5-20 characters: letters, digits or hyphen."/>
+                    <sequence key="ErrorResponseSeq"/>
+                </else>
+            </filter>
+        </inSequence>
+
+        <faultSequence>
+            <log level="custom">
+                <property name="FAULT_STAGE" expression="get-property('stage')"/>
+                <property name="FAULT_CODE" expression="get-property('ERROR_CODE')"/>
+                <property name="FAULT_MESSAGE" expression="get-property('ERROR_MESSAGE')"/>
+            </log>
+            <filter source="get-property('stage')" regex="DB">
+                <then>
+                    <property name="err_status"  scope="default" type="STRING" value="503"/>
+                    <property name="err_code"    scope="default" type="STRING" value="DB_ERROR"/>
+                    <property name="err_message" scope="default" type="STRING" value="The account database is currently unavailable. Please retry later."/>
+                </then>
+                <else>
+                    <property name="err_status"  scope="default" type="STRING" value="500"/>
+                    <property name="err_code"    scope="default" type="STRING" value="INTERNAL_ERROR"/>
+                    <property name="err_message" scope="default" type="STRING" value="Unexpected error while processing the request."/>
+                </else>
+            </filter>
+            <sequence key="ErrorResponseSeq"/>
+        </faultSequence>
+    </resource>
+</api>

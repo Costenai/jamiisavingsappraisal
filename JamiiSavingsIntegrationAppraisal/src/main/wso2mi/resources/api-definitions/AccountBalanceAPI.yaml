@@ -1,0 +1,20 @@
+openapi: 3.0.1
+info:
+  title: AccountBalanceAPI
+  description: API Name - AccountBalanceAPI. This API is used to retrieve account number datails such as account number, account status, account balance (amount and currency), request id and date-time. The consuming chanlles needs to pass host, port and uri
+  version: 1.0.0
+servers:
+- url: http://localhost:8290/accounts
+- url: https://localhost:8253/accounts
+paths:
+  /{accountNumber}/balance:
+    get:
+      parameters:
+      - name: accountNumber
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: Default response

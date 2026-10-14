@@ -1,0 +1,24 @@
+<data name="AccountDataService" serviceNamespace="" serviceGroup="" transports="http https" disableStreaming="true">
+    <description/>
+    <config id="AccountDataSource">
+        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
+        <property name="url">jdbc:mysql://localhost:3306/customerdetails_db?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</property>
+        <property name="username">soauser</property>
+        <property name="password">Int3gr@t!0n</property>
+    </config>
+    <query id="get_accountsaccountnumberbalance_query" useConfig="AccountDataSource">
+        <sql>SELECT account_number, status, balance, currency FROM accounts_details WHERE account_number = ?</sql>
+        <param name="account_number" paramType="SCALAR" sqlType="STRING" type="IN" ordinal="1"/>
+        <result element="accounts" rowName="account">
+            <element name="accountNumber" column="account_number" xsdType="string" exportType="Scalar" requiredRoles=""/>
+            <element name="status" column="status" xsdType="string" exportType="Scalar" requiredRoles=""/>
+            <element name="balance" column="balance" xsdType="decimal" exportType="Scalar" requiredRoles=""/>
+            <element name="currency" column="currency" xsdType="string" exportType="Scalar" requiredRoles=""/>
+        </result>
+    </query>
+    <resource method="GET" path="accounts/{accountNumber}/balance" disableStreaming="true">
+        <call-query href="get_accountsaccountnumberbalance_query">
+            <with-param name="account_number" query-param="accountNumber"/>
+        </call-query>
+    </resource>
+</data>

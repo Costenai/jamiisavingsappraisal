@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence xmlns="http://ws.apache.org/ns/synapse" name="ErrorResponseSeq">
+    <property name="HTTP_SC" scope="axis2" expression="get-property('err_status')"/>
+    <property name="NO_ENTITY_BODY" scope="axis2" action="remove"/>
+    <payloadFactory media-type="json">
+        <format>{"error":{"code":"$1","message":"$2"},"requestId":"$3","timestamp":"$4"}</format>
+        <args>
+            <arg evaluator="xml" expression="get-property('err_code')"/>
+            <arg evaluator="xml" expression="get-property('err_message')"/>
+            <arg evaluator="xml" expression="get-property('req_id')"/>
+            <arg evaluator="xml" expression="get-property('req_ts')"/>
+        </args>
+    </payloadFactory>
+    <property name="messageType" scope="axis2" value="application/json"/>
+    <!-- Audit the request/response, then reply -->
+    <property name="audit_outcome" scope="default" type="STRING" expression="get-property('err_code')"/>
+    <sequence key="AuditLogSeq"/>
+    <respond/>
+</sequence>
